@@ -68,7 +68,12 @@ while True:
             print "PREVIOUS ACTION"
         elif read_ser == random_button:
             resp = requests.get('http://localhost:3000/api/v1/commands/?cmd=random')
-            print('RANDOM ' + random_enabled ? "ENABLED" : "DISABLED")
+            random_enabled = not random_enabled
+            if random_enabled:
+                print "RANDOM ENABLED"
+            else:
+                print "RANDOM DISABLED"
+            print('RANDOM ' + if random_enabled  "ENABLED" else "DISABLED")
         elif read_ser in radio_config.keys():
             radio_name = radio_config[read_ser]
 	    resp = requests.get('http://localhost:3000/api/v1/commands/?cmd=playplaylist&name=' + radio_name)

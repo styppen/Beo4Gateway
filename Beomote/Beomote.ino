@@ -16,6 +16,13 @@
 #include "Beomote.h"
 #include "IRremote.h"
 
+struct cmd {
+  beo_command cmd;
+  unsigned long received;
+  boolean processed;
+};
+
+
 // SONY REMOTE CODES
 const unsigned long SONY_POWER = 0xA90;
 const unsigned long SONY_MUTE  = 0x290;
@@ -49,10 +56,20 @@ const unsigned long SIOL_NUMBER_9 = 0xC1CC9669;
 const unsigned long SIOL_YELLOW   = 0xC1CC12ED;
 
 
-int beoIrPin = 4;
+int beoIrPin = 10;
 IRsend irsend;
 
 unsigned char currentMode;
+
+
+const int cmdBufferLength = 2;
+int bufferIndex = 0;
+cmd cmdBuffer[cmdBufferLength];
+unsigned long lastCmdReceived = 0;
+unsigned long lastEval = 0;
+
+long evaluateBuffer = 1000; //ms
+long doublePressThreshold = 300; //ms
 
 void sendSony(unsigned long sonyCode, int numberOfBits) {
   for (int i = 0; i < 4; i++) {
@@ -72,144 +89,94 @@ void loop() {
   BeoCommand cmd;
   
   if (Beo.receive(cmd)) {  
-    Serial.print(cmd.link, HEX);
+    /*Serial.print(cmd.link, HEX);
     Serial.print(cmd.address, HEX);
-    Serial.println(cmd.command, HEX);
+    Serial.println(cmd.command, HEX);*/
 
-    // B&O to SONY translator part
-    if (cmd.command == TV && currentMode != TV) {
-      currentMode = TV;
-      Serial.println("TV MODE ENABLED");
-    }
-  
-    if (cmd.command == DVD && currentMode != DVD){
-      currentMode = DVD;
-      Serial.println("SIOL BOX MODE ENABLED");
-    }
-    
-    if (cmd.command == RADIO || cmd.command == CD || cmd.command == PHONO) {
-      currentMode = cmd.command;
-      Serial.println("CHANGED MODE");
-    }
-
-    if (currentMode == TV || currentMode == DVD) {
-      if (cmd.command == STOP) {
-        Serial.println("MUTE (STOP)");
-        sendSony(SONY_MUTE, 12);
-      }
-      if (cmd.command == EXIT) {
-        Serial.println("POWER (EXIT)");
-        sendSony(SONY_POWER, 12);
-      }
-    }
-    
-    if (currentMode == TV) {
-      if (cmd.command == UP) {
-          Serial.println("UP");
-          sendSony(SONY_UP, 12);
-      }
-      else if (cmd.command == DOWN) {
-        Serial.println("DOWN");
-        sendSony(SONY_DOWN, 12);
-      }
-      else if (cmd.command == LEFT) {
-        Serial.println("LEFT");
-        sendSony(SONY_LEFT, 12);
-      }
-      else if (cmd.command == RIGHT) {
-        Serial.println("RIGHT");
-        sendSony(SONY_RIGHT, 12);
-      }
-      else if (cmd.command == GO) {
-        Serial.println("OK (GO)");
-        sendSony(SONY_OK, 12);
-      }
-      else if (cmd.command == RED) {
-        Serial.println("BACK (RED)");
-        sendSony(SONY_BACK, 15);
-      }
-      else if (cmd.command == BLUE) {
-        Serial.println("HOME (BLUE)");
-        sendSony(SONY_HOME, 12);
-      }
-      else if (cmd.command == GREEN) {
-        Serial.println("TV (GREEN)");
-        sendSony(SONY_TV, 12);
-      }
-    } // if isTV
-    else if (currentMode == DVD) {
-      if (cmd.command == UP) {
-        Serial.println("SIOL UP");
-        irsend.sendNEC(SIOL_UP, 32);
-      }
-      if (cmd.command == DOWN) {
-        Serial.println("SIOL DOWN");
-        irsend.sendNEC(SIOL_DOWN, 32);
-      }
-      if (cmd.command == LEFT) {
-        Serial.println("SIOL LEFT");
-        irsend.sendNEC(SIOL_LEFT, 32);
-      }
-      if (cmd.command == RIGHT) {
-        Serial.println("SIOL RIGHT");
-        irsend.sendNEC(SIOL_RIGHT, 32);
-      }
-      if (cmd.command == GO) {
-        Serial.println("SIOL OK");
-        irsend.sendNEC(SIOL_OK, 32);
-      }
-      if (cmd.command == YELLOW) {
-        Serial.println("SIOL YELLOW");
-        irsend.sendNEC(SIOL_YELLOW, 32);
-      }
-      if (cmd.command == RED) {
-        Serial.println("SIOL BACK");
-        irsend.sendNEC(SIOL_BACK, 32);
-      }
-      if (cmd.command == NUMBER_0) {
-        Serial.println("SIOL 0");
-        irsend.sendNEC(SIOL_NUMBER_0, 32);
-      }
-      if (cmd.command == NUMBER_1) {
-        Serial.println("SIOL 1");
-        irsend.sendNEC(SIOL_NUMBER_1, 32);
-      }
-      if (cmd.command == NUMBER_2) {
-        Serial.println("SIOL 2");
-        irsend.sendNEC(SIOL_NUMBER_2, 32);
-      }
-      if (cmd.command == NUMBER_3) {
-        Serial.println("SIOL 3");
-        irsend.sendNEC(SIOL_NUMBER_3, 32);
-      }
-      if (cmd.command == NUMBER_4) {
-        Serial.println("SIOL 4");
-        irsend.sendNEC(SIOL_NUMBER_4, 32);
-      }
-      if (cmd.command == NUMBER_5) {
-        Serial.println("SIOL 5");
-        irsend.sendNEC(SIOL_NUMBER_5, 32);
-      }
-      if (cmd.command == NUMBER_6) {
-        Serial.println("SIOL 6");
-        irsend.sendNEC(SIOL_NUMBER_6, 32);
-      }
-      if (cmd.command == NUMBER_7) {
-        Serial.println("SIOL 7");
-        irsend.sendNEC(SIOL_NUMBER_7, 32);
-      }
-      if (cmd.command == NUMBER_8) {
-        Serial.println("SIOL 8");
-        irsend.sendNEC(SIOL_NUMBER_8, 32);
-      }
-      if (cmd.command == NUMBER_9) {
-        Serial.println("SIOL 9");
-        irsend.sendNEC(SIOL_NUMBER_9, 32);
-      }
-      if (cmd.command == GREEN) {
-        Serial.println("SIOL PLAY");
-        irsend.sendNEC(SIOL_PLAY    , 32);
-      }
-    } // if isDVD
+    addToBuffer(cmd.command);
+    printBuffer();
   } // if Beo.receiveCmd
+
+  if (millis() - lastEval > evaluateBuffer)
+  {
+    //Serial.println("Evaluating buffer");
+
+    if (isBufferReady())
+    {
+      if (isDoublePress()) {
+        Serial.println("Double press detected");
+        for (int i = 0; i < cmdBufferLength; i++) {
+          if (!cmdBuffer[i].processed) {
+            //do some action according to the code
+            cmdBuffer[i].processed = true;
+          }
+        }
+      }
+      else {
+        Serial.println("Single press detected");  
+
+        for (int i = 0; i < cmdBufferLength; i++) {
+          if (!cmdBuffer[i].processed) {
+            //do some action according to the code
+            cmdBuffer[i].processed = true;
+          }
+        }
+        
+      }  
+    }
+    
+    lastEval = millis();
+  }
+}
+
+boolean isDoublePress() {
+
+  unsigned long diff;
+
+  if (cmdBuffer[0].received > cmdBuffer[1].received) {
+    diff = cmdBuffer[0].received - cmdBuffer[1].received;
+  }
+  else if(cmdBuffer[0].received < cmdBuffer[1].received) {
+    diff = cmdBuffer[1].received - cmdBuffer[0].received;
+  }
+
+  
+  boolean isThresholdReached =  diff <= doublePressThreshold;
+  boolean hasContent = cmdBuffer[0].cmd != 0 && cmdBuffer[1].cmd != 0;
+  boolean isContentEqual = cmdBuffer[0].cmd == cmdBuffer[1].cmd;
+  boolean isProcessed = true; //!cmdBuffer[0].processed && !cmdBuffer[1].processed;
+
+  Serial.print("Diff=");
+  Serial.println(diff);
+  return isThresholdReached && hasContent && isContentEqual && isProcessed;
+}
+
+boolean isBufferReady() {
+
+  boolean hasContent = cmdBuffer[0].received != 0 || cmdBuffer[1].received != 0;
+  boolean hasValidCotent = !cmdBuffer[0].processed || !cmdBuffer[1].processed;
+  
+  return hasContent && hasValidCotent;
+}
+
+void addToBuffer(beo_command cmd) {
+  cmdBuffer[bufferIndex].cmd = cmd;
+  cmdBuffer[bufferIndex].received = millis();
+  cmdBuffer[bufferIndex].processed = false;
+  bufferIndex = (bufferIndex + 1) % cmdBufferLength;
+}
+
+void printBuffer() {
+  for (int i = 0; i < cmdBufferLength; i++) {
+    Serial.print("Command=");
+    Serial.print(cmdBuffer[i].cmd, HEX);
+    Serial.print(", ");  
+    Serial.print(" Received=");
+    Serial.print(cmdBuffer[i].received);
+    Serial.print(", ");  
+    Serial.print(" Processed=");
+    Serial.print(cmdBuffer[i].processed);
+    Serial.print("; ");
+  }  
+  Serial.println();
 }

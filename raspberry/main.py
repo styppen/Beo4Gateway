@@ -19,11 +19,14 @@ ser = serial.Serial("/dev/ttyUSB0",9600)  #change ACM number as found from ls /d
 ser.baudrate=9600
 
 current_state = "0000"
+random_enabled = False;
+
 
 cd_mode = "0192"
 go_button = "0135"
 next_button = "0134"
 previous_button = "0132"
+random_button = "01C1"
 
 # GO 0135
 # >> 0134
@@ -63,6 +66,14 @@ while True:
         elif read_ser == previous_button:
             resp = requests.get('http://localhost:3000/api/v1/commands/?cmd=prev')
             print "PREVIOUS ACTION"
+        elif read_ser == random_button:
+            resp = requests.get('http://localhost:3000/api/v1/commands/?cmd=random')
+            random_enabled = not random_enabled
+            if random_enabled:
+                print "RANDOM ENABLED"
+            else:
+                print "RANDOM DISABLED"
+            print('RANDOM ' + if random_enabled  "ENABLED" else "DISABLED")
         elif read_ser in radio_config.keys():
             radio_name = radio_config[read_ser]
 	    resp = requests.get('http://localhost:3000/api/v1/commands/?cmd=playplaylist&name=' + radio_name)

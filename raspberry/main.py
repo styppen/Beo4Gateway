@@ -55,10 +55,19 @@ while True:
         if current_state == cd_mode and read_ser != cd_mode:
             print "Pausing music because mode was switched"
             resp = requests.get('http://localhost:3000/api/v1/commands/?cmd=pause')
+            # turn of the random led indicator so that it doesn't bother us
+            random_led.off()
         current_state = read_ser
         print "Current mode: " + current_state
 
     if current_state == cd_mode:
+        
+        # check if we have to turn on the random led
+        if random_enabled:
+            random_led.on()
+        else:
+            random_led.off():
+
         if read_ser == go_button:
             resp = requests.get('http://localhost:3000/api/v1/commands/?cmd=toggle')
 	    print('PLAY/PAUSE');

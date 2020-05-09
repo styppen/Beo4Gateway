@@ -1,5 +1,6 @@
 import serial
 import requests
+from gpiozero import led
 
 radio_config = {}
 
@@ -20,6 +21,7 @@ ser.baudrate=9600
 
 current_state = "0000"
 random_enabled = False;
+random_led = LED(17)
 
 
 cd_mode = "0192"
@@ -71,8 +73,10 @@ while True:
             random_enabled = not random_enabled
             if random_enabled:
                 print "RANDOM ENABLED"
+                random_led.on()
             else:
                 print "RANDOM DISABLED"
+                random_led.off()
         elif read_ser in radio_config.keys():
             radio_name = radio_config[read_ser]
 	    resp = requests.get('http://localhost:3000/api/v1/commands/?cmd=playplaylist&name=' + radio_name)

@@ -1,6 +1,6 @@
 import serial
 import requests
-from gpiozero import led
+from gpiozero import LED
 
 radio_config = {}
 

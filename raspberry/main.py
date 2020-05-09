@@ -66,7 +66,7 @@ while True:
         if random_enabled:
             random_led.on()
         else:
-            random_led.off():
+            random_led.off()
 
         if read_ser == go_button:
             resp = requests.get('http://localhost:3000/api/v1/commands/?cmd=toggle')

@@ -1,5 +1,6 @@
 import serial
 import requests
+from gpiozero import LED
 
 radio_config = {}
 
@@ -18,8 +19,9 @@ load_config()
 ser = serial.Serial('/dev/ttyUSB0',9600)  #change ACM number as found from ls /dev/tty*
 ser.baudrate=9600
 
-current_state = '0000'
-random_enabled = False
+current_state = "0000"
+random_enabled = False;
+random_led = LED(17)
 
 cd_mode = '0192'
 go_button = '0135'
@@ -56,10 +58,19 @@ while True:
         if current_state == cd_mode and read_ser != cd_mode:
             print 'Pausing music because mode was switched'
             resp = requests.get('http://localhost:3000/api/v1/commands/?cmd=pause')
+            # turn of the random led indicator so that it doesn't bother us
+            random_led.off()
         current_state = read_ser
         print 'Current mode: ' + current_state
 
     if current_state == cd_mode:
+        
+        # check if we have to turn on the random led
+        if random_enabled:
+            random_led.on()
+        else:
+            random_led.off()
+
         if read_ser == go_button:
             resp = requests.get('http://localhost:3000/api/v1/commands/?cmd=toggle')
             print 'PLAY/PAUSE'
@@ -73,9 +84,11 @@ while True:
             resp = requests.get('http://localhost:3000/api/v1/commands/?cmd=random')
             random_enabled = not random_enabled
             if random_enabled:
-                print 'RANDOM ENABLED'
+                print "RANDOM ENABLED"
+                random_led.on()
             else:
-                print 'RANDOM DISABLED'
+                print "RANDOM DISABLED"
+                random_led.off()
         elif read_ser[2:] == red_button:
             print 'RED button pressed'
             resp = requests.get('http://localhost:3000/api/v1/commands/?cmd=clearQueue')

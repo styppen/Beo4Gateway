@@ -1,6 +1,5 @@
 import serial
 import Codes
-from gpiozero import LED
 from Player import Player
 
 ser = serial.Serial('/dev/ttyUSB0', 9600)  #change ACM number as found from ls /dev/tty*

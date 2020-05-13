@@ -1,4 +1,5 @@
 import requests
+import logging
 from gpiozero import LED
 
 
@@ -15,12 +16,15 @@ def load_config():
 
 class Player:
 
+    logging.basicConfig(format='%(asctime)s %(levelname)-6s %(message)s',
+                        level=logging.INFO,
+                        datefmt='%Y-%m-%d %H:%M:%S')
+
     def __init__(self, hostname):
         self.hostname = hostname
         self.random_enabled = self.get_random()
         self.radio_config = load_config()
         self.random_led = self.init_random_led()
-        print {'hostname': self.hostname, 'random': self.random_enabled}
 
     def init_random_led(self, gpio_pin=17):
         led = LED(gpio_pin)
@@ -39,37 +43,32 @@ class Player:
 
     def play(self):
         self.do_command('play')
-        print 'PLAY'
 
     def pause(self):
         self.do_command('pause')
-        print 'PAUSE'
 
     def toggle_play(self):
         self.do_command('toggle')
-        print 'PLAY/PAUSE'
 
     def next(self):
         self.do_command('next')
-        print 'NEXT'
 
     def previous(self):
         self.do_command('prev')
-        print 'PREVIOUS'
 
     def random(self):
         self.do_command('random')
         self.random_led.toggle()
         self.random_enabled = self.get_random()
-        print 'RANDOM'
+        logging.info('Random =' + str(self.random_enabled))
 
     def play_playlist(self, playlist_name):
         requests.get(self.hostname + '/api/v1/commands/?cmd=playplaylist&name=' + playlist_name)
-        print 'PLAY PLAYLIST: ' + playlist_name
+        logging.info('Playing playlist = ' + playlist_name)
 
     def clear_queue(self):
         self.do_command('clearQueue')
-        print 'CLEAR QUEUE'
 
     def do_command(self, command):
         requests.get(self.hostname + '/api/v1/commands/?cmd=' + command)
+        logging.info('Executed command = ' + command.upper())

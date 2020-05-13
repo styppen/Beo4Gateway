@@ -1,14 +1,17 @@
 import serial
 import Codes
+import logging
 from Player import Player
+
+logging.basicConfig(format='%(asctime)s %(levelname)-6s %(message)s', level=logging.INFO, datefmt='%Y-%m-%d %H:%M:%S')
+
+logging.info('Logger initalised')
 
 ser = serial.Serial('/dev/ttyUSB0', 9600)  #change ACM number as found from ls /dev/tty*
 ser.baudrate = 9600
 
 current_state = "0000"
-random_enabled = False;
 player = Player('http://localhost:3000')
-
 modes = [Codes.TV, Codes.LIGHT, Codes.RADIO, Codes.SAT, Codes.DVD, Codes.CD, Codes.V_TAPE, Codes.RECORD, Codes.A_TAPE, Codes.PHONO]
 
 print 'Current mode: ' + current_state
@@ -16,15 +19,16 @@ print 'Current mode: ' + current_state
 while True:
     read_ser = ser.readline()
     read_ser = read_ser.strip()
-    print 'RECEIVED CODE:' + read_ser
+    logging.info('Received code = ' + read_ser)
     if read_ser in modes:
         if current_state == Codes.CD and read_ser != Codes.CD:
-            print 'Pausing music because mode was switched'
+            logging.info('Pausing music because mode was switched')
             player.pause()
+
             # turn of the random led indicator so that it doesn't bother us
             player.random_led.off()
         current_state = read_ser
-        print 'Current mode: ' + current_state
+        logging.info('Current mode = ' + current_state)
 
     if current_state == Codes.CD:
 

@@ -7,7 +7,7 @@ ser.baudrate = 9600
 
 current_state = "0000"
 random_enabled = False;
-player = Player('http://volumio')
+player = Player('http://localhost:3000')
 
 modes = [Codes.TV, Codes.LIGHT, Codes.RADIO, Codes.SAT, Codes.DVD, Codes.CD, Codes.V_TAPE, Codes.RECORD, Codes.A_TAPE, Codes.PHONO]
 
@@ -27,6 +27,12 @@ while True:
         print 'Current mode: ' + current_state
 
     if current_state == Codes.CD:
+
+        if player.random_enabled:
+            player.random_led.on()
+        else:
+            player.random_led.off()
+
         if read_ser == Codes.GO:
             player.toggle_play()
         elif read_ser == Codes.NEXT:

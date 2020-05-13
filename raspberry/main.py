@@ -7,7 +7,6 @@ ser.baudrate = 9600
 
 current_state = "0000"
 random_enabled = False;
-random_led = LED(17)
 player = Player('http://volumio')
 
 modes = [Codes.TV, Codes.LIGHT, Codes.RADIO, Codes.SAT, Codes.DVD, Codes.CD, Codes.V_TAPE, Codes.RECORD, Codes.A_TAPE, Codes.PHONO]
@@ -23,18 +22,11 @@ while True:
             print 'Pausing music because mode was switched'
             player.pause()
             # turn of the random led indicator so that it doesn't bother us
-            random_led.off()
+            player.random_led.off()
         current_state = read_ser
         print 'Current mode: ' + current_state
 
     if current_state == Codes.CD:
-        
-        # check if we have to turn on the random led
-        if player.random_enabled:
-            random_led.on()
-        else:
-            random_led.off()
-
         if read_ser == Codes.GO:
             player.toggle_play()
         elif read_ser == Codes.NEXT:
@@ -43,13 +35,6 @@ while True:
             player.previous()
         elif read_ser == Codes.RANDOM:
             player.random()
-            random_enabled = not random_enabled
-            if random_enabled:
-                print "RANDOM ENABLED"
-                random_led.on()
-            else:
-                print "RANDOM DISABLED"
-                random_led.off()
         elif read_ser[2:] == Codes.RED:
             player.clear_queue()
             player.play_playlist('Rock')

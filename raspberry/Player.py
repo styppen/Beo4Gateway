@@ -60,6 +60,7 @@ class Player:
     def random(self):
         self.do_command('random')
         self.random_led.toggle()
+        self.random_enabled = self.get_random()
         print 'RANDOM'
 
     def play_playlist(self, playlist_name):

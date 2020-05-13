@@ -13,18 +13,24 @@ def load_config():
         i += 1
     return radio_config
 
+def init_logger():
+    logger = logging.getLogger('Player')
+    logger.setLevel(logging.INFO)
+    log_handler = logging.StreamHandler()
+    log_formatter = logging.Formatter('%(asctime)s %(levelname)-6s %(message)s')
+    log_handler.setFormatter(log_formatter)
+    logger.addHandler(log_handler)
+    return logger
+
 
 class Player:
-
-    logging.basicConfig(format='%(asctime)s %(levelname)-6s %(message)s',
-                        level=logging.INFO,
-                        datefmt='%Y-%m-%d %H:%M:%S')
 
     def __init__(self, hostname):
         self.hostname = hostname
         self.random_enabled = self.get_random()
         self.radio_config = load_config()
         self.random_led = self.init_random_led()
+        self.logger = init_logger()
 
     def init_random_led(self, gpio_pin=17):
         led = LED(gpio_pin)
@@ -60,15 +66,15 @@ class Player:
         self.do_command('random')
         self.random_led.toggle()
         self.random_enabled = self.get_random()
-        logging.info('Random =' + str(self.random_enabled))
+        self.logger.info('Random =' + str(self.random_enabled))
 
     def play_playlist(self, playlist_name):
         requests.get(self.hostname + '/api/v1/commands/?cmd=playplaylist&name=' + playlist_name)
-        logging.info('Playing playlist = ' + playlist_name)
+        self.logger.info('Playing playlist = ' + playlist_name)
 
     def clear_queue(self):
         self.do_command('clearQueue')
 
     def do_command(self, command):
         requests.get(self.hostname + '/api/v1/commands/?cmd=' + command)
-        logging.info('Executed command = ' + command.upper())
+        self.logger.info('Executed command = ' + command.upper())

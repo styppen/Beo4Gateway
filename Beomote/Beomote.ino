@@ -15,6 +15,8 @@
 
 #include "Beomote.h"
 #include "IRremote.h"
+#include "Sony.h"
+#include "Siol.h"
 
 struct cmd {
   beo_command cmd;
@@ -23,41 +25,10 @@ struct cmd {
 };
 
 
-// SONY REMOTE CODES
-const unsigned long SONY_POWER = 0xA90;
-const unsigned long SONY_MUTE  = 0x290;
-const unsigned long SONY_UP    = 0x2F0;
-const unsigned long SONY_DOWN  = 0xAF0;
-const unsigned long SONY_LEFT  = 0x2D0;
-const unsigned long SONY_RIGHT = 0xCD0;
-const unsigned long SONY_HOME  = 0x70;
-const unsigned long SONY_BACK  = 0x62E9;
-const unsigned long SONY_OK    = 0xA70;
-const unsigned long SONY_TV    = 0x250;
-
-// SIOL BOX REMOTE CODES
-const unsigned long SIOL_BACK  = 0xC1CCA956;
-const unsigned long SIOL_OK    = 0xC1CC827D;
-const unsigned long SIOL_UP    = 0xC1CC42BD;
-const unsigned long SIOL_DOWN  = 0xC1CCC23D;
-const unsigned long SIOL_LEFT  = 0xC1CC22DD;
-const unsigned long SIOL_RIGHT = 0xC1CCA25D;
-const unsigned long SIOL_PLAY  = 0xC1CC59A6;
-const unsigned long SIOL_NUMBER_0 = 0xC1CC06F9;
-const unsigned long SIOL_NUMBER_1 = 0xC1CC8679;
-const unsigned long SIOL_NUMBER_2 = 0xC1CC46B9;
-const unsigned long SIOL_NUMBER_3 = 0xC1CCC639;
-const unsigned long SIOL_NUMBER_4 = 0xC1CC26D9;
-const unsigned long SIOL_NUMBER_5 = 0xC1CCA659;
-const unsigned long SIOL_NUMBER_6 = 0xC1CC6699;
-const unsigned long SIOL_NUMBER_7 = 0xC1CCE619;
-const unsigned long SIOL_NUMBER_8 = 0xC1CC16E9;
-const unsigned long SIOL_NUMBER_9 = 0xC1CC9669;
-const unsigned long SIOL_YELLOW   = 0xC1CC12ED;
-
-
-int beoIrPin = 10;
+int beoIrPin = 4;
 IRsend irsend;
+Sony sony;
+Siol siol;
 
 unsigned char currentMode;
 
@@ -71,10 +42,32 @@ unsigned long lastEval = 0;
 long evaluateBuffer = 1000; //ms
 long doublePressThreshold = 300; //ms
 
-void sendSony(unsigned long sonyCode, int numberOfBits) {
-  for (int i = 0; i < 4; i++) {
-    irsend.sendSony(sonyCode, numberOfBits);
-    delay(40);
+
+const int cmdBufferLength = 2;
+int bufferIndex = 0;
+cmd cmdBuffer[cmdBufferLength];
+unsigned long lastCmdReceived = 0;
+unsigned long lastEval = 0;
+
+long evaluateBuffer = 700; //ms
+long doublePressThreshold = 400; //ms
+
+void handleStatus() {
+
+  for (int i = 0; i < cmdBufferLength; i++) {
+    if (cmdBuffer[i].cmd == TV && currentMode != TV) {
+      currentMode = TV;
+    }
+  
+    if (cmdBuffer[i].cmd == DVD && currentMode != DVD){
+      currentMode = DVD;
+      Serial.println("SIOL BOX MODE ENABLED");
+    }
+    
+    if (cmdBuffer[i].cmd == RADIO || cmdBuffer[i].cmd == CD || cmdBuffer[i].cmd == PHONO) {
+      currentMode = cmdBuffer[i].cmd;
+      Serial.println("CHANGED MODE");
+    }
   }
 }
 
@@ -94,15 +87,17 @@ void loop() {
     Serial.println(cmd.command, HEX);*/
 
     addToBuffer(cmd.command);
-    printBuffer();
+    //printBuffer();
   } // if Beo.receiveCmd
 
   if (millis() - lastEval > evaluateBuffer)
   {
-    //Serial.println("Evaluating buffer");
 
     if (isBufferReady())
     {
+
+      handleStatus();
+      
       if (isDoublePress()) {
         Serial.println("Double press detected");
         for (int i = 0; i < cmdBufferLength; i++) {
@@ -119,11 +114,30 @@ void loop() {
           if (!cmdBuffer[i].processed) {
             //do some action according to the code
             cmdBuffer[i].processed = true;
-          }
-        }
+
+            // some functions are available in TV and DVD mode
+            if (currentMode == TV || currentMode == DVD) {
+              if (cmd.command == STOP) {
+                Serial.println("MUTE (STOP)");
+                sony.sendCommand(SONY_MUTE, 12);
+              }
+              if (cmd.command == EXIT) {
+                Serial.println("POWER (EXIT)");
+                sony.sendCommand(SONY_POWER, 12);
+              }
+            }
+
+            if (currentMode == TV) {
+              sony.handleCommand(cmd);
+            }
+            else if (currentMode == DVD) {
+              siol.handleCommand(cmd);
+            }
+          } // if cmd not processed
+        } // for loop
         
-      }  
-    }
+      } // isDoublePress
+    } // isBufferReady
     
     lastEval = millis();
   }
@@ -146,17 +160,21 @@ boolean isDoublePress() {
   boolean isContentEqual = cmdBuffer[0].cmd == cmdBuffer[1].cmd;
   boolean isProcessed = true; //!cmdBuffer[0].processed && !cmdBuffer[1].processed;
 
-  Serial.print("Diff=");
-  Serial.println(diff);
   return isThresholdReached && hasContent && isContentEqual && isProcessed;
 }
 
 boolean isBufferReady() {
 
+  boolean isFirstProcessed = cmdBuffer[0].processed;
   boolean hasContent = cmdBuffer[0].received != 0 || cmdBuffer[1].received != 0;
   boolean hasValidCotent = !cmdBuffer[0].processed || !cmdBuffer[1].processed;
+  boolean canBeMidPress = (millis() - cmdBuffer[0].received) < doublePressThreshold;
+
+  // buffer could be evaluated between a potential double click ... 
+  // we want to prevent that ... wait a bit more
+  boolean isMidPress = !isFirstProcessed && canBeMidPress;
   
-  return hasContent && hasValidCotent;
+  return hasContent && hasValidCotent && !isMidPress;
 }
 
 void addToBuffer(beo_command cmd) {

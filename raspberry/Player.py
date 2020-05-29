@@ -26,11 +26,13 @@ def init_logger():
 class Player:
 
     def __init__(self, hostname):
+        self.logger = init_logger()
+        self.radio_config = load_config()
+
         self.hostname = hostname
         self.random_enabled = self.get_random()
-        self.radio_config = load_config()
         self.random_led = self.init_random_led()
-        self.logger = init_logger()
+
 
     def init_random_led(self, gpio_pin=17):
         led = LED(gpio_pin)
@@ -41,8 +43,11 @@ class Player:
         return led
 
     def get_random(self):
-        resp = self.get_status()
-        return resp.json()['random']
+        try:
+            resp = self.get_status()
+            return resp.json()['random']
+        except:
+            return False
 
     def get_status(self):
         return requests.get(self.hostname + '/api/v1/getState')

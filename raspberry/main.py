@@ -35,10 +35,10 @@ client.connect(broker_address)
 client.on_message = on_message
 client.loop_start()
 
-logger.info("Subscribing to MQTT topic", "beo/eye")
+logger.info("Subscribing to MQTT topic beo/eye")
 client.subscribe("beo/eye")
 
-logger.info("Publishing init message to topic", "beo/eye")
+logger.info("Publishing init message to topic beo/eye")
 client.publish("beo/eye", "MQTT is am alive!")
 
 while True:

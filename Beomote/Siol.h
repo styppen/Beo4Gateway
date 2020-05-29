@@ -21,7 +21,8 @@ typedef enum SiolCode {
   SIOL_NUMBER_7 = 0xC1CCE619,
   SIOL_NUMBER_8 = 0xC1CC16E9,
   SIOL_NUMBER_9 = 0xC1CC9669,
-  SIOL_YELLOW   = 0xC1CC12ED
+  SIOL_YELLOW   = 0xC1CC12ED,
+  SIOL_BLUE     = 0xC1CC29D6
 } SiolCode;
 
 class Siol {

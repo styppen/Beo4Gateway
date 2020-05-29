@@ -78,4 +78,8 @@ void Siol::handleCommand(BeoCommand cmd) {
     Serial.println("SIOL PLAY");
     ir.sendNEC(SIOL_PLAY    , 32);
   }
+  if (cmd.command == BLUE) {
+    Serial.println("SIOL WINDOW");
+    ir.sendNEC(SIOL_BLUE, 32);  
+  }
 }

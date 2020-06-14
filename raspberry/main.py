@@ -2,6 +2,7 @@ import serial
 import Codes
 import logging
 from Player import Player
+import paho.mqtt.client as mqtt
 
 logger = logging.getLogger('main')
 logger.setLevel(logging.INFO)
@@ -19,6 +20,43 @@ player = Player('http://localhost:3000')
 modes = [Codes.TV, Codes.LIGHT, Codes.RADIO, Codes.SAT, Codes.DVD, Codes.CD, Codes.V_TAPE, Codes.RECORD, Codes.A_TAPE, Codes.PHONO]
 
 logger.info('Current mode: ' + current_state)
+
+def on_message(client, userdata, message):
+    command = str(message.payload.decode("utf-8"))
+    logger.info("MQTT message received: \"" + command + "\"")
+
+    if command == 'PLAY.SHORT':
+        ser.write('RADIO;')
+    elif command == 'PLAY.LONG':
+        ser.write('OFF;')
+    elif command == 'UP.SHORT':
+        ser.write('VOL.UP;')
+    elif command == 'DOWN.SHORT':
+        ser.write('VOL.DOWN;')
+    elif command == 'UP.LONG':
+        ser.write('NEXT;')
+    elif command == 'DOWN.LONG':
+        ser.write('PREV;')    
+
+
+broker_address = "192.168.1.2"
+
+logger.info("Creating new MQTT instance")
+client = mqtt.Client("P1")
+
+logger.info("Connecting to raspberry broker")
+client.connect(broker_address)
+
+client.on_message = on_message
+client.loop_start()
+
+logger.info("Subscribing to MQTT topic beo/eye")
+client.subscribe("beo/eye")
+
+logger.info("Publishing init message to topic beo/eye")
+client.publish("beo/eye", "MQTT is alive!")
+
+ser.write("ARDUINO TEST");
 
 while True:
     read_ser = ser.readline()

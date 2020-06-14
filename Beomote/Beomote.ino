@@ -34,7 +34,7 @@ int index = 0;
 char serialBuffer[bufferSize];
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(9600);
   
   Beo.initialize(beoIrPin);
   Serial.println("I'm alive!");
@@ -69,7 +69,6 @@ void loop() {
   }
 
   if (Serial.available() == 0 && !Beo.isInitialised()) {
-    Serial.println("Beo IR re-init");
     Beo.initialize(beoIrPin);
   }
   

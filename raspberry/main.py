@@ -22,7 +22,22 @@ modes = [Codes.TV, Codes.LIGHT, Codes.RADIO, Codes.SAT, Codes.DVD, Codes.CD, Cod
 logger.info('Current mode: ' + current_state)
 
 def on_message(client, userdata, message):
-    print("message received ", str(message.payload.decode("utf-8")))
+    command = str(message.payload.decode("utf-8"))
+    logger.info("MQTT message received: \"" + command + "\"")
+
+    if command == 'PLAY.SHORT':
+        ser.write('RADIO;')
+    elif command == 'PLAY.LONG':
+        ser.write('OFF;')
+    elif command == 'UP.SHORT':
+        ser.write('VOL.UP;')
+    elif command == 'DOWN.SHORT':
+        ser.write('VOL.DOWN;')
+    elif command == 'UP.LONG':
+        ser.write('NEXT;')
+    elif command == 'DOWN.LONG':
+        ser.write('PREV;')    
+
 
 broker_address = "192.168.1.2"
 
@@ -39,7 +54,9 @@ logger.info("Subscribing to MQTT topic beo/eye")
 client.subscribe("beo/eye")
 
 logger.info("Publishing init message to topic beo/eye")
-client.publish("beo/eye", "MQTT is am alive!")
+client.publish("beo/eye", "MQTT is alive!")
+
+ser.write("ARDUINO TEST");
 
 while True:
     read_ser = ser.readline()

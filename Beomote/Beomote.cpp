@@ -23,6 +23,16 @@ void Beomote::initialize(int pin) {
 
 	// Resetting clock select register, and starts the clock with no prescale
 	TCCR1B |= _BV(CS10);
+
+  isInit = true;
+}
+
+boolean Beomote::isInitialised() {
+  return isInit;  
+}
+
+void Beomote::setInitialised(boolean val) {
+  isInit = val;
 }
 
 void Beomote::reset() {

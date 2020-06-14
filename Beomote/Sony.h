@@ -12,7 +12,8 @@ typedef enum SonyCode {
   SONY_HOME  = 0x70,
   SONY_BACK  = 0x62E9,
   SONY_OK    = 0xA70,
-  SONY_TV    = 0x250
+  SONY_TV    = 0x250,
+  SONY_PLAY  = 0x2CE9
 } SonyCode;
 
 

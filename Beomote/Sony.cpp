@@ -41,7 +41,11 @@ void Sony::handleCommand(BeoCommand cmd) {
     sendCommand(SONY_HOME, 12);
   }
   else if (cmd.command == GREEN) {
-    Serial.println("TV (GREEN)");
+    Serial.println("PLAY/PAUSE");
+    sendCommand(SONY_PLAY, 15);
+  }
+  else if (cmd.command == MENU) {
+    Serial.println("GOTO TV");
     sendCommand(SONY_TV, 12);
   }
     

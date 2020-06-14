@@ -17,16 +17,24 @@
 #include "IRremote.h"
 #include "Sony.h"
 #include "Siol.h"
+#include "Beosender.h"
 
 int beoIrPin = 4;
+int beoSendPin = 9;
 IRsend irsend;
 unsigned char currentMode;
 
 Sony sony;
 Siol siol;
+Beosender beo(beoSendPin);
+
+char serialCmd;
+const int bufferSize = 10;
+int index = 0;
+char serialBuffer[bufferSize];
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   
   Beo.initialize(beoIrPin);
   Serial.println("I'm alive!");
@@ -34,6 +42,36 @@ void setup() {
 
 void loop() {
   BeoCommand cmd;
+
+  while(Serial.available() > 0) {
+    
+    serialCmd = Serial.read();
+    serialBuffer[index] = serialCmd;
+
+    if (serialBuffer[index] == ';') {
+      char command[index - 1];
+      for(int i = 0; i < index; i++) {
+        command[i] = serialBuffer[i];
+      }
+      command[index] = '\0';
+      
+      Serial.print("Received serial command: ");  
+      Serial.println(command);
+      beo.handleCommand(command);
+      
+      Beo.setInitialised(false);
+      index = 0;
+    }
+    else {
+      index++;  
+    }
+    
+  }
+
+  if (Serial.available() == 0 && !Beo.isInitialised()) {
+    Serial.println("Beo IR re-init");
+    Beo.initialize(beoIrPin);
+  }
   
   if (Beo.receive(cmd)) {  
     Serial.print(cmd.link, HEX);

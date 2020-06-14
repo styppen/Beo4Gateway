@@ -29,6 +29,8 @@ class Beomote {
 
         // This method is only to be called by the interrupt service routine
         void timerISR();
+        void setInitialised(boolean val);
+        boolean isInitialised();
 
     private:
         int irPin;
@@ -37,6 +39,7 @@ class Beomote {
         int lastBeoBit;
 
         boolean irReceived;
+        boolean isInit;
 
         boolean link;
         unsigned char address;

@@ -36,7 +36,12 @@ def on_message(client, userdata, message):
     elif command == 'UP.LONG':
         ser.write('NEXT;')
     elif command == 'DOWN.LONG':
-        ser.write('PREV;')    
+        ser.write('PREV;')
+    elif command == 'TIMER.SHORT':
+        ser.write('TV.ON;')
+    elif command == 'TIMER.LONG':
+        ser.write('TV.OFF;')
+
 
 
 broker_address = "192.168.1.2"
@@ -102,3 +107,13 @@ while True:
             radio_name = player.radio_config[read_ser]
             player.clear_queue()
             player.play_playlist(radio_name)
+    
+    if read_ser[2:3] in (Codes.DVD[2:3], Codes.TV[2:3]):
+        client.publish('beo/eye', 'TIMER.LED.ON')
+        client.publish('beo/eye', 'PLAY.LED.ON')
+    if read_ser == Codes.EXIT:
+        client.publish('beo/eye', 'TIMER.LED.OFF')
+    elif read_ser in (Codes.CD, Codes.PHONO, Codes.RADIO):
+        client.publish('beo/eye', 'PLAY.LED.ON')
+    elif read_ser[2] == Codes.STANDBY[2]:
+        client.publish('beo/eye', 'PLAY.LED.OFF')

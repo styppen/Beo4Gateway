@@ -4,6 +4,7 @@
 */
 
 #include "Arduino.h"
+#include "IrManager.h"
 
 class Beosender
 {
@@ -13,7 +14,7 @@ class Beosender
     void pulse(int usec);
     void data(int usec);
 
-    void handleCommand(char command[]);
+    void handleCommand(IrManager& manager, char command[]);
 
     void addToBuffer(char c);
     boolean isCommand();

@@ -15,17 +15,15 @@
 
 #include "Beomote.h"
 #include "IRremote.h"
-#include "Sony.h"
-#include "Siol.h"
 #include "Beosender.h"
+#include "IrManager.h"
 
 int beoIrPin = 4;
 int beoSendPin = 9;
 IRsend irsend;
 unsigned char currentMode;
 
-Sony sony;
-Siol siol;
+IrManager manager;
 Beosender beo(beoSendPin);
 
 char serialCmd;
@@ -57,7 +55,7 @@ void loop() {
       
       Serial.print("Received serial command: ");  
       Serial.println(command);
-      beo.handleCommand(command);
+      beo.handleCommand(manager, command);
       
       Beo.setInitialised(false);
       index = 0;
@@ -75,40 +73,8 @@ void loop() {
   if (Beo.receive(cmd)) {  
     Serial.print(cmd.link, HEX);
     Serial.print(cmd.address, HEX);
-    Serial.println(cmd.command, HEX);
-
-    // B&O to SONY translator part
-    if (cmd.command == TV && currentMode != TV) {
-      currentMode = TV;
-      Serial.println("TV MODE ENABLED");
-    }
-  
-    if (cmd.command == DVD && currentMode != DVD){
-      currentMode = DVD;
-      Serial.println("SIOL BOX MODE ENABLED");
-    }
+    Serial.println(cmd.command, HEX); 
     
-    if (cmd.command == RADIO || cmd.command == CD || cmd.command == PHONO) {
-      currentMode = cmd.command;
-      Serial.println("CHANGED MODE");
-    }
-
-    if (currentMode == TV || currentMode == DVD) {
-      if (cmd.command == STOP) {
-        Serial.println("MUTE (STOP)");
-        sony.sendCommand(SONY_MUTE, 12);
-      }
-      if (cmd.command == EXIT) {
-        Serial.println("POWER (EXIT)");
-        sony.sendCommand(SONY_POWER, 12);
-      }
-    }
-    
-    if (currentMode == TV) {
-      sony.handleCommand(cmd);
-    }
-    else if (currentMode == DVD) {
-      siol.handleCommand(cmd);
-    }
+    manager.handleCommand(cmd);
   } // if Beo.receiveCmd
 }

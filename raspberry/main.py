@@ -115,5 +115,5 @@ while True:
         client.publish('beo/eye', 'TIMER.LED.OFF')
     elif read_ser in (Codes.CD, Codes.PHONO, Codes.RADIO):
         client.publish('beo/eye', 'PLAY.LED.ON')
-    elif read_ser[2] == Codes.STANDBY[2]:
+    elif len(read_ser) > 2 and read_ser[2] == Codes.STANDBY[2]:
         client.publish('beo/eye', 'PLAY.LED.OFF')

@@ -101,7 +101,7 @@ boolean Beosender::isCommand() {
   return serialBuffer[index] == ';';
 }
 
-void Beosender::handleCommand(char command[]) {
+void Beosender::handleCommand(IrManager& manager, char command[]) {
   if (strcmp(command, "VOL.UP") == 0) {
     sendIR(SOURCE_AUDIO, VOLUME_UP);
   }
@@ -125,6 +125,21 @@ void Beosender::handleCommand(char command[]) {
   }
   else if (strcmp(command, "OFF") == 0) {
     sendIR(SOURCE_AUDIO, STANDBY);
+  }
+  else if (strcmp(command, "TV.ON") == 0) {
+    BeoCommand cmd;
+    cmd.link = true;
+    cmd.address = SOURCE_VIDEO;
+    cmd.command = DVD;
+
+    manager.handleCommand(cmd);
+  }
+  else if (strcmp(command, "TV.OFF") == 0) {
+    BeoCommand cmd;
+    cmd.link = true;
+    cmd.address = SOURCE_VIDEO;
+    cmd.command = EXIT;
+    manager.handleCommand(cmd);  
   }
 }
 

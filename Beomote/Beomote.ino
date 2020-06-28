@@ -55,7 +55,7 @@ void loop() {
       
       Serial.print("Received serial command: ");  
       Serial.println(command);
-      beo.handleCommand(command);
+      beo.handleCommand(manager, command);
       
       Beo.setInitialised(false);
       index = 0;

@@ -10,7 +10,6 @@ void IrManager::handleCommand(BeoCommand cmd) {
     handleStatusChange(cmd);
   }
   else {
-
     // there are some commands we want to execute if TV or DVD state
     if (currentStatus == TV || currentStatus == DVD) {
       if (cmd.command == EXIT) {
@@ -73,20 +72,44 @@ void IrManager::sendSony(SonyCode code, int numberOfBits = 12) {
 void IrManager::handleSiol(BeoCommand cmd) {
   
   if (cmd.command == UP) {
-    Serial.println("SIOL UP");
-    ir.sendNEC(SIOL_UP, 32);
+    if(isPlayMode) {
+      Serial.println("SIOL RIGHT");
+      ir.sendNEC(SIOL_RIGHT, 32);  
+    }
+    else {
+      Serial.println("SIOL UP");
+      ir.sendNEC(SIOL_UP, 32);
+    }
   }
   if (cmd.command == DOWN) {
-    Serial.println("SIOL DOWN");
-    ir.sendNEC(SIOL_DOWN, 32);
+    if(isPlayMode) {
+      Serial.println("SIOL LEFT");
+      ir.sendNEC(SIOL_LEFT, 32);  
+    }
+    else {
+      Serial.println("SIOL DOWN");
+      ir.sendNEC(SIOL_DOWN, 32);
+    }
   }
   if (cmd.command == LEFT) {
-    Serial.println("SIOL LEFT");
-    ir.sendNEC(SIOL_LEFT, 32);
+    if (isPlayMode) {
+      Serial.println("SIOL REWIND");
+      ir.sendNEC(SIOL_RWD, 32);
+    }
+    else {
+      Serial.println("SIOL LEFT");
+      ir.sendNEC(SIOL_LEFT, 32);
+    }
   }
   if (cmd.command == RIGHT) {
-    Serial.println("SIOL RIGHT");
-    ir.sendNEC(SIOL_RIGHT, 32);
+    if(isPlayMode) {
+      Serial.println("SIOL FORWARD");
+      ir.sendNEC(SIOL_FWD, 32);
+    }
+    else {
+      Serial.println("SIOL RIGHT");
+      ir.sendNEC(SIOL_RIGHT, 32);
+    }
   }
   if (cmd.command == GO) {
     Serial.println("SIOL OK");
@@ -99,6 +122,13 @@ void IrManager::handleSiol(BeoCommand cmd) {
   if (cmd.command == RED) {
     Serial.println("SIOL BACK");
     ir.sendNEC(SIOL_BACK, 32);
+
+    // stop playmode key mapping
+    if (isPlayMode) {
+      Serial.println("PLAY MODE DEACTIVATED");
+      isPlayMode = false;  
+    }
+    
   }
   if (cmd.command == NUMBER_0) {
     Serial.println("SIOL 0");
@@ -143,6 +173,8 @@ void IrManager::handleSiol(BeoCommand cmd) {
   if (cmd.command == GREEN) {
     Serial.println("SIOL PLAY");
     ir.sendNEC(SIOL_PLAY    , 32);
+    Serial.println("PLAY MODE ACTIVATED");
+    isPlayMode = true;
   }
   if (cmd.command == BLUE) {
     Serial.println("SIOL WINDOW");

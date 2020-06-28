@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Arduino.h"
 #include "Beomote.h"
 #include "IRRemote.h"
@@ -35,7 +37,9 @@ typedef enum SiolCode {
   SIOL_NUMBER_8 = 0xC1CC16E9,
   SIOL_NUMBER_9 = 0xC1CC9669,
   SIOL_YELLOW   = 0xC1CC12ED,
-  SIOL_BLUE     = 0xC1CC29D6
+  SIOL_BLUE     = 0xC1CC29D6,
+  SIOL_FWD      = 0xC1CC9966,
+  SIOL_RWD      = 0xC1CCE916
 } SiolCode;
 
 
@@ -49,6 +53,8 @@ class IrManager {
     beo_command currentStatus;
     IRsend ir;
     boolean isTvOn = false;
+
+    boolean isPlayMode = false;
     
     void sendSony(SonyCode code, int numberOfBits);
     boolean isStatusCode(BeoCommand cmd);

@@ -10,13 +10,15 @@ void IrManager::handleCommand(BeoCommand cmd) {
     handleStatusChange(cmd);
   }
   else {
+
+    if (isTvOn && cmd.command == EXIT) {
+      Serial.println("POWER (EXIT)");
+      sendSony(SONY_POWER, 12);
+      isTvOn = false;
+    }
+    
     // there are some commands we want to execute if TV or DVD state
     if (currentStatus == TV || currentStatus == DVD) {
-      if (cmd.command == EXIT) {
-        Serial.println("POWER (EXIT)");
-        sendSony(SONY_POWER, 12);
-        isTvOn = false;
-      }
       if (cmd.command == STOP) {
         Serial.println("MUTE (STOP)");
         sendSony(SONY_MUTE, 12);
@@ -44,6 +46,7 @@ void IrManager::handleStatusChange(BeoCommand cmd) {
         // we don't want to send TV command if we're already in this state
         // because this would exit any Sony related menus and go to Siol TV 
         sendSony(SONY_TV, 12); 
+        isTvOn = true;
       }
     }
     else if(cmd.command == DVD) {

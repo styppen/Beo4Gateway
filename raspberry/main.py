@@ -12,10 +12,10 @@ log_handler.setFormatter(log_formatter)
 logger.addHandler(log_handler)
 logger.info('Logger initalised')
 
-ser = serial.Serial('/dev/ttyUSB0', 9600)  #change ACM number as found from ls /dev/tty*
-ser.baudrate = 9600
+ser = serial.Serial('/dev/ttyUSB0', 115200)  #change ACM number as found from ls /dev/tty*
+ser.baudrate = 115200
 
-current_state = "0000"
+current_state = "00"
 player = Player('http://localhost:3000')
 modes = [Codes.TV, Codes.LIGHT, Codes.RADIO, Codes.SAT, Codes.DVD, Codes.CD, Codes.V_TAPE, Codes.RECORD, Codes.A_TAPE, Codes.PHONO]
 
@@ -47,7 +47,7 @@ def on_message(client, userdata, message):
 broker_address = "192.168.1.2"
 
 logger.info("Creating new MQTT instance")
-client = mqtt.Client("P1")
+client = mqtt.Client("BeoControl")
 
 logger.info("Connecting to raspberry broker")
 client.connect(broker_address)
@@ -60,8 +60,6 @@ client.subscribe("beo/eye")
 
 logger.info("Publishing init message to topic beo/eye")
 client.publish("beo/eye", "MQTT is alive!")
-
-ser.write("ARDUINO TEST");
 
 while True:
     read_ser = ser.readline()
@@ -92,15 +90,15 @@ while True:
             player.previous()
         elif read_ser == Codes.RANDOM:
             player.random()
-        elif read_ser[2:] == Codes.RED:
+        elif read_ser == Codes.RED:
             player.clear_queue()
             player.play_playlist('Rock')
-        elif read_ser[2:] == Codes.GREEN:
+        elif read_ser == Codes.GREEN:
             continue
-        elif read_ser[2:] == Codes.YELLOW:
+        elif read_ser == Codes.YELLOW:
             player.clear_queue()
             player.play_playlist('Classical')
-        elif read_ser[2:] == Codes.BLUE:
+        elif read_ser == Codes.BLUE:
             player.clear_queue()
             player.play_playlist('Jazz')
         elif read_ser in player.radio_config.keys():
@@ -108,12 +106,12 @@ while True:
             player.clear_queue()
             player.play_playlist(radio_name)
     
-    if read_ser[2:3] in (Codes.DVD[2:3], Codes.TV[2:3]):
+    if read_ser in (Codes.DVD, Codes.TV):
         client.publish('beo/eye', 'TIMER.LED.ON')
         client.publish('beo/eye', 'PLAY.LED.ON')
     if read_ser == Codes.EXIT:
         client.publish('beo/eye', 'TIMER.LED.OFF')
     elif read_ser in (Codes.CD, Codes.PHONO, Codes.RADIO):
         client.publish('beo/eye', 'PLAY.LED.ON')
-    elif len(read_ser) > 2 and read_ser[2] == Codes.STANDBY[2]:
+    elif read_ser == Codes.STANDBY:
         client.publish('beo/eye', 'PLAY.LED.OFF')

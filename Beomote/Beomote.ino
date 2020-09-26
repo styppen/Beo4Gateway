@@ -32,7 +32,7 @@ int index = 0;
 char serialBuffer[bufferSize];
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   
   Beo.initialize(beoIrPin);
   Serial.println("I'm alive!");
@@ -71,8 +71,6 @@ void loop() {
   }
   
   if (Beo.receive(cmd)) {  
-    Serial.print(cmd.link, HEX);
-    Serial.print(cmd.address, HEX);
     Serial.println(cmd.command, HEX); 
     
     manager.handleCommand(cmd);

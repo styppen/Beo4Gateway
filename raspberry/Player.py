@@ -33,7 +33,6 @@ class Player:
         self.random_enabled = self.get_random()
         self.random_led = self.init_random_led()
 
-
     def init_random_led(self, gpio_pin=17):
         led = LED(gpio_pin)
         if self.random_enabled:
@@ -83,3 +82,10 @@ class Player:
     def do_command(self, command):
         requests.get(self.hostname + '/api/v1/commands/?cmd=' + command)
         self.logger.info('Executed command = ' + command.upper())
+
+    def is_airplay(self):
+        resp = requests.get(self.hostname + '/api/v1/getState')
+        return resp.json()['trackType'] == 'airplay' and \
+               resp.json()['status'] == 'play' and \
+               len(resp.json()['artist']) > 0
+

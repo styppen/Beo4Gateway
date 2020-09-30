@@ -99,6 +99,7 @@ def airplay_check():
         if is_airplay and not airplay_enabled:
             logger.info("Enabling AirPlay. Switching to CD mode.")
             client.publish(beo_serial_in, "CD;")
+            client.publish(beo_eye, 'PLAY.LED.ON')
             current_state = Codes.CD
         elif not is_airplay and airplay_enabled:
             logger.info("AirPlay was disabled.")

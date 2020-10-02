@@ -91,6 +91,7 @@ def on_serial(client, userdata, message):
         client.publish('beo/eye', 'PLAY.LED.ON')
     elif command == Codes.STANDBY:
         client.publish('beo/eye', 'PLAY.LED.OFF')
+        player.pause()
 
 def airplay_check():
     global airplay_enabled, current_state

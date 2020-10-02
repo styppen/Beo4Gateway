@@ -1,6 +1,7 @@
 import requests
 import logging
 from gpiozero import LED
+import sys
 
 
 def load_config():
@@ -84,8 +85,12 @@ class Player:
         self.logger.info('Executed command = ' + command.upper())
 
     def is_airplay(self):
-        resp = requests.get(self.hostname + '/api/v1/getState')
-        return resp.json()['trackType'] == 'airplay' and \
-               resp.json()['status'] == 'play' and \
-               len(resp.json()['artist']) > 0
+        try:
+            resp = requests.get(self.hostname + '/api/v1/getState')
+            return resp.json()['trackType'] == 'airplay' and \
+                   resp.json()['status'] == 'play' and \
+                   len(resp.json()['artist']) > 0
+        except KeyError:
+            return False
+
 

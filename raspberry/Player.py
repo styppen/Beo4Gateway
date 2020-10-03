@@ -1,6 +1,7 @@
 import requests
 import logging
 from gpiozero import LED
+import sys
 
 
 def load_config():
@@ -32,7 +33,6 @@ class Player:
         self.hostname = hostname
         self.random_enabled = self.get_random()
         self.random_led = self.init_random_led()
-
 
     def init_random_led(self, gpio_pin=17):
         led = LED(gpio_pin)
@@ -83,3 +83,14 @@ class Player:
     def do_command(self, command):
         requests.get(self.hostname + '/api/v1/commands/?cmd=' + command)
         self.logger.info('Executed command = ' + command.upper())
+
+    def is_airplay(self):
+        try:
+            resp = requests.get(self.hostname + '/api/v1/getState')
+            return resp.json()['trackType'] == 'airplay' and \
+                   resp.json()['status'] == 'play' and \
+                   len(resp.json()['artist']) > 0
+        except KeyError:
+            return False
+
+

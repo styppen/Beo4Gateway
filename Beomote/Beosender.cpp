@@ -126,6 +126,9 @@ void Beosender::handleCommand(IrManager& manager, char command[]) {
   else if (strcmp(command, "OFF") == 0) {
     sendIR(SOURCE_AUDIO, STANDBY);
   }
+  else if (strcmp(command, "AUX") == 0) {
+    sendIR(SOURCE_AUDIO, AUDIO_AUX);
+  }
   else if (strcmp(command, "TV.ON") == 0) {
     BeoCommand cmd;
     cmd.link = true;

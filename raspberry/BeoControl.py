@@ -36,7 +36,7 @@ def on_message(client, userdata, message):
     logger.info('Received on topic [ ' + message.topic + ' ], RAW message  [ ' + command + ' ]')
 
 def on_serial(client, userdata, message):
-    global current_state
+    global current_state, input_index, dimmer_hold, previous_state
     command = str(message.payload.decode("utf-8"))
     command = command.strip()
 
@@ -91,7 +91,32 @@ def on_serial(client, userdata, message):
         client.publish('beo/eye', 'PLAY.LED.ON')
     elif command == Codes.STANDBY:
         client.publish('beo/eye', 'PLAY.LED.OFF')
+        input_index = 0
         player.pause()
+
+    # handling of dimmer functionality
+    if command == Codes.LIGHT and current_state != Codes.LIGHT:
+        # we have to remember the previous state because the LIGHT option has timeout on the Beo4
+        previous_state = current_state
+        current_state = Codes.LIGHT
+
+    # after LIGHT timeout, Beo4 reverts to previous state
+    if command == Codes.LIST and current_state == Codes.LIGHT:
+        logger.info('Restoring previous state')
+        current_state = previous_state
+
+    if current_state == Codes.LIGHT and command == Codes.GO:
+        client.publish('beo/dimmer', 'DIMMER.TOGGLE')
+
+    if current_state == Codes.LIGHT and command == Codes.GREEN:
+        if not dimmer_hold:
+            client.publish('beo/dimmer', 'DIMMER.HOLD')
+            dimmer_hold = not dimmer_hold
+        elif dimmer_hold:
+            client.publish('beo/dimmer', 'DIMMER.RELEASE')
+            dimmer_hold = not dimmer_hold
+
+
 
 def airplay_check():
     global airplay_enabled, current_state
@@ -108,24 +133,44 @@ def airplay_check():
         time.sleep(2)
 
 def on_beo_eye(client, userdata, message):
-    global current_state
+    global current_state, input_loop_list, input_index
     command = str(message.payload.decode("utf-8"))
     command = command.strip()
     logger.info('Received on topic [ ' + message.topic + ' ], RAW message  [ ' + command + ' ]')
 
-    # handle any messages from BeoEye
-    if command == 'PLAY.SHORT':
-        client.publish(beo_serial_in, 'RADIO;')
+    # handle messages from BeoEye
+    if command == 'PLAY.SHORT' and current_state == Codes.CD:
+        player.toggle_play()
+    elif command == 'PLAY.DOUBLE':
+        if input_index == 0:
+            client.publish(beo_serial_in, 'RADIO;')
+            current_state = Codes.RADIO
+        elif input_index == 1:
+            client.publish(beo_serial_in, 'CD;')
+            current_state = Codes.CD
+        elif input_index == 2:
+            client.publish(beo_serial_in, 'AUX;')
+            current_state = Codes.DVD
+
+        input_index = input_index + 1
+        input_index = input_index % 3
+
     elif command == 'PLAY.LONG':
         client.publish(beo_serial_in, 'OFF;')
     elif command == 'UP.SHORT':
         client.publish(beo_serial_in, 'VOL.UP;')
+    elif command == 'UP.DOUBLE':
+        if current_state == Codes.RADIO:
+            client.publish(beo_serial_in, 'NEXT;')
+        elif current_state == Codes.CD:
+            player.next()
     elif command == 'DOWN.SHORT':
         client.publish(beo_serial_in, 'VOL.DOWN;')
-    elif command == 'UP.LONG':
-        client.publish(beo_serial_in, 'NEXT;')
-    elif command == 'DOWN.LONG':
-        client.publish(beo_serial_in, 'PREV;')
+    elif command == 'DOWN.DOUBLE':
+        if current_state == Codes.RADIO:
+            client.publish(beo_serial_in, 'PREV;')
+        elif current_state == Codes.CD:
+            player.previous()
     elif command == 'TIMER.SHORT':
         client.publish(beo_serial_in, 'TV.ON;')
     elif command == 'TIMER.LONG':
@@ -138,18 +183,21 @@ beo_serial_out = 'beo/serial/out'
 beo_eye = 'beo/eye'
 
 airplay_enabled = False
+dimmer_hold = False
 
 logger = init_logger()
 client = connect_mqtt("BeoControl2", broker_address, main_topic)
 client.message_callback_add('beo/eye', on_beo_eye)
 client.message_callback_add('beo/serial/out', on_serial)
 
-current_state = "0000"
+current_state = '0000'
+previous_state = '0000'
 player = Player('http://localhost:3000')
 
-modes = [Codes.TV, Codes.LIGHT, Codes.RADIO, Codes.SAT, Codes.DVD,
+modes = [Codes.TV, Codes.RADIO, Codes.SAT, Codes.DVD,
          Codes.CD, Codes.V_TAPE, Codes.RECORD, Codes.A_TAPE, Codes.PHONO]
 
+input_index = 0
 logger.info('Current mode: ' + current_state)
 
 airplay = threading.Thread(airplay_check(), args=(1,))

@@ -1,5 +1,6 @@
 CD = '92'
 GO = '35'
+GO_REPEAT = '75'
 NEXT = '34'
 PREVIOUS = '32'
 RANDOM = 'C1'
@@ -21,3 +22,5 @@ PHONO = '93'
 
 EXIT = '7F'
 STANDBY = 'C'
+
+LIST = '58'

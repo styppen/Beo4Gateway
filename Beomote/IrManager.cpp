@@ -18,18 +18,8 @@ void IrManager::handleCommand(BeoCommand cmd) {
     }
     
     // there are some commands we want to execute if TV or DVD state
-    if (currentStatus == TV || currentStatus == DVD) {
-      if (cmd.command == STOP) {
-        Serial.println("MUTE (STOP)");
-        sendSony(SONY_MUTE, 12);
-      }
-    }
-    
-    if (currentStatus == TV) {
-      handleSony(cmd);  
-    }
-    else if (currentStatus == DVD) {
-      handleSiol(cmd);  
+    if (isTvOn) {
+      handleSony(cmd);
     }
   }
 }
@@ -42,21 +32,15 @@ void IrManager::handleStatusChange(BeoCommand cmd) {
   else {
     if (cmd.command == TV) {
       Serial.println("SONY TV MODE ENABLED");
-      if (currentStatus != TV) {
+      if (currentStatus != TV || !isTvOn) {
         // we don't want to send TV command if we're already in this state
         // because this would exit any Sony related menus and go to Siol TV 
         sendSony(SONY_TV, 12); 
         isTvOn = true;
       }
     }
-    else if(cmd.command == DVD) {
-      Serial.println("SIOL TV MODE ENABLED");
-      sendSony(SONY_TV, 12);  
-      isTvOn = true;
-    }
     currentStatus = cmd.command;
  }
-    
 }
 
 boolean IrManager::isStatusCode(BeoCommand cmd) {
@@ -221,6 +205,10 @@ void IrManager::handleSony(BeoCommand cmd) {
   else if (cmd.command == MENU) {
     Serial.println("SONY HOME MENU");
     sendSony(SONY_HOME, 12);
+  }
+  else if (cmd.command == STOP) {
+    Serial.println("MUTE (STOP)");
+    sendSony(SONY_MUTE, 12);
   }
 }
 

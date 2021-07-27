@@ -11,6 +11,11 @@
  * enters mode to control the Sony TV.
  * 
  * Then of course, follows the mapping from B&O to Sony TV. 
+ * 
+ * When compiling and uploading use the following settings:
+ *      Board: Arduino Nano
+ *      Processor: ATMega328P (Old bootloader)
+ *      Port: Whatever appears in the menu
  */
 
 #include "Beomote.h"
@@ -19,7 +24,7 @@
 #include "IrManager.h"
 
 int beoIrPin = 4;
-int beoSendPin = 9;
+int beoSendPin = 3;
 IRsend irsend;
 unsigned char currentMode;
 

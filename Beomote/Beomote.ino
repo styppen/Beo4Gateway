@@ -24,7 +24,7 @@
 #include "IrManager.h"
 
 int beoIrPin = 4;
-int beoSendPin = 3;
+int beoSendPin = 9;
 IRsend irsend;
 unsigned char currentMode;
 

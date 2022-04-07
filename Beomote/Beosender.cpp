@@ -133,8 +133,7 @@ void Beosender::handleCommand(IrManager& manager, char command[]) {
     BeoCommand cmd;
     cmd.link = true;
     cmd.address = SOURCE_VIDEO;
-    cmd.command = DVD;
-
+    cmd.command = TV;
     manager.handleCommand(cmd);
   }
   else if (strcmp(command, "TV.OFF") == 0) {
@@ -143,6 +142,9 @@ void Beosender::handleCommand(IrManager& manager, char command[]) {
     cmd.address = SOURCE_VIDEO;
     cmd.command = EXIT;
     manager.handleCommand(cmd);  
+  }
+  else if (strcmp(command, "RECORD") == 0) {
+    sendIR(SOURCE_AUDIO, PHONO);
   }
 }
 

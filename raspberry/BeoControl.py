@@ -5,30 +5,15 @@ import paho.mqtt.client as mqtt
 import threading
 import time
 
-def connect_mqtt(client_name, broker, subscribe_topic):
-    logger.info("Creating new MQTT instance")
-    client = mqtt.Client(client_name)
-
-    logger.info("Connecting to raspberry broker")
-    client.connect(broker)
-
-    client.on_message = on_message
-    client.on_connect = on_connect
-    client.on_disconnect = on_disconnect
-    #client.loop_start()
-
-    logger.info("Subscribing to MQTT topic " + subscribe_topic)
-    client.subscribe(subscribe_topic)
-
-    return client
-
-def init_logger():
+def init_logger(log_file):
     logger = logging.getLogger('main')
     logger.setLevel(logging.INFO)
-    log_handler = logging.StreamHandler()
+    log_handlers = [logging.StreamHandler(), logging.FileHandler(log_file)]
     log_formatter = logging.Formatter('%(asctime)s %(levelname)-6s %(message)s')
-    log_handler.setFormatter(log_formatter)
-    logger.addHandler(log_handler)
+    for handler in log_handlers:
+        handler.setFormatter(log_formatter)
+        logger.addHandler(handler)
+
     logger.info('Logger initalised')
     return logger
 
@@ -38,11 +23,11 @@ def on_message(client, userdata, message):
     logger.info('Received on topic [ ' + message.topic + ' ], RAW message  [ ' + command + ' ]')
 
 def on_connect(client, userdata, flags, rc):
-    print("MQTT client connected!")
+    logger.info("MQTT client connected!")
 
 def on_disconnect(client, userdata, rc):
     if rc != 0:
-        print("Unexpected MQTT disconnection. Will auto-reconnect")
+        logger.error("Unexpected MQTT disconnection. Will auto-reconnect")
 
 def on_serial(client, userdata, message):
     global current_state
@@ -140,18 +125,30 @@ def on_beo_eye(client, userdata, message):
     elif command == 'TIMER.LONG':
         client.publish(beo_serial_in, 'TV.OFF;')
 
-broker_address = '192.168.1.2'
+broker_address = '192.168.1.30'
 main_topic = "beo/#"
 beo_serial_in = 'beo/serial/in'
 beo_serial_out = 'beo/serial/out'
 beo_eye = 'beo/eye'
+log_file = '/home/volumio/beocontrol.log'
 
 airplay_enabled = False
 
-logger = init_logger()
-client = connect_mqtt("BeoControl2", broker_address, main_topic)
+logger = init_logger(log_file)
+logger.info("Creating new MQTT instance")
+
+client = mqtt.Client("BeoControl", clean_session=False)
+logger.info("Connecting to MQTT broker ... ")
+client.connect(broker_address)
+client.on_message = on_message
+client.on_connect = on_connect
+client.on_disconnect = on_disconnect
+
+logger.info("Subscribing to MQTT topic " + main_topic)
+client.subscribe(main_topic)
 client.message_callback_add('beo/eye', on_beo_eye)
 client.message_callback_add('beo/serial/out', on_serial)
+client.loop_start()
 
 current_state = "0000"
 player = Player('http://localhost:3000')
@@ -164,4 +161,4 @@ logger.info('Current mode: ' + current_state)
 airplay = threading.Thread(airplay_check(), args=(1,))
 airplay.start()
 
-client.loop_forever()
+

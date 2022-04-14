@@ -13,7 +13,9 @@ def connect_mqtt(client_name, broker, subscribe_topic):
     client.connect(broker)
 
     client.on_message = on_message
-    client.loop_start()
+    client.on_connect = on_connect
+    client.on_disconnect = on_disconnect
+    #client.loop_start()
 
     logger.info("Subscribing to MQTT topic " + subscribe_topic)
     client.subscribe(subscribe_topic)
@@ -34,6 +36,13 @@ def on_message(client, userdata, message):
     command = str(message.payload.decode("utf-8"))
     command = command.strip()
     logger.info('Received on topic [ ' + message.topic + ' ], RAW message  [ ' + command + ' ]')
+
+def on_connect(client, userdata, flags, rc):
+    print("MQTT client connected!")
+
+def on_disconnect(client, userdata, rc):
+    if rc != 0:
+        print("Unexpected MQTT disconnection. Will auto-reconnect")
 
 def on_serial(client, userdata, message):
     global current_state
@@ -155,5 +164,4 @@ logger.info('Current mode: ' + current_state)
 airplay = threading.Thread(airplay_check(), args=(1,))
 airplay.start()
 
-while True:
-    continue
+client.loop_forever()

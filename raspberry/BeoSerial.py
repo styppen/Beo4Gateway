@@ -48,7 +48,7 @@ client = mqtt.Client('BeoSerial')
 logger.info("Connecting to MQTT broker ... ")
 client.connect(broker_address)
 
-client.on_message = on_message
+client.message_callback_add(beo_serial_in, on_message)
 client.on_connect = on_connect
 client.on_disconnect = on_disconnect
 

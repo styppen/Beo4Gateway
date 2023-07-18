@@ -15,7 +15,10 @@ typedef enum SonyCode {
   SONY_BACK  = 0x62E9,
   SONY_OK    = 0xA70,
   SONY_TV    = 0x250,
-  SONY_PLAY  = 0x2CE9
+  SONY_PLAY  = 0x2CE9,
+  SONY_ACTION = 0x6923,
+  SONY_VOLUME_UP = 0x490,
+  SONY_VOLUME_DOWN = 0xC90
 } SonyCode;
 
 typedef enum SiolCode {

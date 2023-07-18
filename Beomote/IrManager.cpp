@@ -175,6 +175,14 @@ void IrManager::handleSony(BeoCommand cmd) {
     Serial.println("UP");
     sendSony(SONY_UP, 12);
   }
+  else if (cmd.command == VOLUME_UP) {
+    Serial.println("VOLUME UP");
+    sendSony(SONY_VOLUME_UP, 12);
+  }
+  else if (cmd.command == VOLUME_DOWN) {
+    Serial.println("VOLUME DOWN");
+    sendSony(SONY_VOLUME_DOWN, 12);
+  }  
   else if (cmd.command == DOWN) {
     Serial.println("DOWN");
     sendSony(SONY_DOWN, 12);
@@ -200,7 +208,11 @@ void IrManager::handleSony(BeoCommand cmd) {
     sendSony(SONY_PLAY, 15);
   }
   else if(cmd.command == YELLOW) {
-    openSubtitles();  
+    //openSubtitles();  
+  }
+  else if (cmd.command == BLUE) {
+    Serial.println("SONY ACTION MENU");
+    sendSony(SONY_ACTION, 15);
   }
   else if (cmd.command == MENU) {
     Serial.println("SONY HOME MENU");

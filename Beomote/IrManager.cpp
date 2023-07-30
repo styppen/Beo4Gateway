@@ -3,7 +3,10 @@
 #include "Beomote.h"
 #include "Commands.h"
 
-
+/*
+ * Entry point for handling BeoCommands and logic
+ * for mapping Beo to Sony IR commands
+ */
 void IrManager::handleCommand(BeoCommand cmd) {
 
   if (isStatusCode(cmd)) {
@@ -24,6 +27,53 @@ void IrManager::handleCommand(BeoCommand cmd) {
   }
 }
 
+/*
+ * Handling of commands received via serial input.
+ * This function receives an array of chars and 
+ * converts it to a BeoCommand structure.
+ */
+void IrManager::handleCommand(char command[])
+{
+  Serial.print("IrManager::HandleCommand - ");
+  Serial.println(command);
+  
+  /* NOTE:
+   * Moving cmd.link and cmd.address outside of if stmts
+   * causes this function to stop working. 
+   */
+  BeoCommand cmd;
+
+  if (strcmp(command, "VOL.UP") == 0) {
+    cmd.link = true;
+    cmd.address = SOURCE_VIDEO;
+    cmd.command = VOLUME_UP;
+    handleCommand(cmd);
+  }
+  else if (strcmp(command, "VOL.DOWN") == 0) {
+    cmd.link = true;
+    cmd.address = SOURCE_VIDEO;
+    cmd.command = VOLUME_DOWN;
+    handleCommand(cmd);
+  }
+  else if (strcmp(command, "TV.ON") == 0) {
+    cmd.link = true;
+    cmd.address = SOURCE_VIDEO;
+    cmd.command = TV;
+    handleCommand(cmd);
+  }
+  else if (strcmp(command, "TV.OFF") == 0) {
+    cmd.link = true;
+    cmd.address = SOURCE_VIDEO;
+    cmd.command = EXIT;
+    handleCommand(cmd);
+  }
+}
+
+/*
+ * Function that handles state transitions. This handles the behaviour
+ * of certain IR commands in Sony TV that might have undesired results
+ * when pressed twice.
+ */
 void IrManager::handleStatusChange(BeoCommand cmd) {
 
   if (!isStatusCode(cmd)) {
@@ -43,12 +93,19 @@ void IrManager::handleStatusChange(BeoCommand cmd) {
  }
 }
 
+/*
+ * Function that returns checks whether the input command
+ * should change the state of the controller. 
+ */
 boolean IrManager::isStatusCode(BeoCommand cmd) {
   
   return cmd.command == RADIO || cmd.command == TV || cmd.command == CD || 
          cmd.command == DVD || cmd.command == PHONO;
 }
 
+/*
+ * Function that triggers an IR led that is attached to the Sony TV 
+ */
 void IrManager::sendSony(SonyCode code, int numberOfBits = 12) {
     for (int i = 0; i < 4; i++) {
       ir.sendSony(code, numberOfBits);
@@ -56,119 +113,9 @@ void IrManager::sendSony(SonyCode code, int numberOfBits = 12) {
   }
 }
 
-void IrManager::handleSiol(BeoCommand cmd) {
-  
-  if (cmd.command == UP) {
-    if(isPlayMode) {
-      Serial.println("SIOL RIGHT");
-      ir.sendNEC(SIOL_RIGHT, 32);  
-    }
-    else {
-      Serial.println("SIOL UP");
-      ir.sendNEC(SIOL_UP, 32);
-    }
-  }
-  if (cmd.command == DOWN) {
-    if(isPlayMode) {
-      Serial.println("SIOL LEFT");
-      ir.sendNEC(SIOL_LEFT, 32);  
-    }
-    else {
-      Serial.println("SIOL DOWN");
-      ir.sendNEC(SIOL_DOWN, 32);
-    }
-  }
-  if (cmd.command == LEFT) {
-    if (isPlayMode) {
-      Serial.println("SIOL REWIND");
-      ir.sendNEC(SIOL_RWD, 32);
-    }
-    else {
-      Serial.println("SIOL LEFT");
-      ir.sendNEC(SIOL_LEFT, 32);
-    }
-  }
-  if (cmd.command == RIGHT) {
-    if(isPlayMode) {
-      Serial.println("SIOL FORWARD");
-      ir.sendNEC(SIOL_FWD, 32);
-    }
-    else {
-      Serial.println("SIOL RIGHT");
-      ir.sendNEC(SIOL_RIGHT, 32);
-    }
-  }
-  if (cmd.command == GO) {
-    Serial.println("SIOL OK");
-    ir.sendNEC(SIOL_OK, 32);
-  }
-  if (cmd.command == YELLOW) {
-    Serial.println("SIOL YELLOW");
-    ir.sendNEC(SIOL_YELLOW, 32);
-  }
-  if (cmd.command == RED) {
-    Serial.println("SIOL BACK");
-    ir.sendNEC(SIOL_BACK, 32);
-
-    // stop playmode key mapping
-    if (isPlayMode) {
-      Serial.println("PLAY MODE DEACTIVATED");
-      isPlayMode = false;  
-    }
-    
-  }
-  if (cmd.command == NUMBER_0) {
-    Serial.println("SIOL 0");
-    ir.sendNEC(SIOL_NUMBER_0, 32);
-  }
-  if (cmd.command == NUMBER_1) {
-    Serial.println("SIOL 1");
-    ir.sendNEC(SIOL_NUMBER_1, 32);
-  }
-  if (cmd.command == NUMBER_2) {
-    Serial.println("SIOL 2");
-    ir.sendNEC(SIOL_NUMBER_2, 32);
-  }
-  if (cmd.command == NUMBER_3) {
-    Serial.println("SIOL 3");
-    ir.sendNEC(SIOL_NUMBER_3, 32);
-  }
-  if (cmd.command == NUMBER_4) {
-    Serial.println("SIOL 4");
-    ir.sendNEC(SIOL_NUMBER_4, 32);
-  }
-  if (cmd.command == NUMBER_5) {
-    Serial.println("SIOL 5");
-    ir.sendNEC(SIOL_NUMBER_5, 32);
-  }
-  if (cmd.command == NUMBER_6) {
-    Serial.println("SIOL 6");
-    ir.sendNEC(SIOL_NUMBER_6, 32);
-  }
-  if (cmd.command == NUMBER_7) {
-    Serial.println("SIOL 7");
-    ir.sendNEC(SIOL_NUMBER_7, 32);
-  }
-  if (cmd.command == NUMBER_8) {
-    Serial.println("SIOL 8");
-    ir.sendNEC(SIOL_NUMBER_8, 32);
-  }
-  if (cmd.command == NUMBER_9) {
-    Serial.println("SIOL 9");
-    ir.sendNEC(SIOL_NUMBER_9, 32);
-  }
-  if (cmd.command == GREEN) {
-    Serial.println("SIOL PLAY");
-    ir.sendNEC(SIOL_PLAY    , 32);
-    Serial.println("PLAY MODE ACTIVATED");
-    isPlayMode = true;
-  }
-  if (cmd.command == BLUE) {
-    Serial.println("SIOL WINDOW");
-    ir.sendNEC(SIOL_BLUE, 32);  
-  } 
-}
-
+/*
+ * Main logic that translates BeoCommand struct to Sony IR commands. 
+ */
 void IrManager::handleSony(BeoCommand cmd) {
 
   if (cmd.command == UP) {
@@ -222,16 +169,4 @@ void IrManager::handleSony(BeoCommand cmd) {
     Serial.println("MUTE (STOP)");
     sendSony(SONY_MUTE, 12);
   }
-}
-
-void IrManager::openSubtitles() {
-  Serial.println("OPENING SUBTITLES DIALOG ...");
-  sendSony(SONY_OK, 12);
-  delay(250);  
-  for (int i = 0; i < 3; i++) {
-    sendSony(SONY_LEFT, 12);  
-    delay(250);
-  }
-  sendSony(SONY_OK, 12);
-  Serial.println("SUBTITLES DIALOG OPEN");
 }

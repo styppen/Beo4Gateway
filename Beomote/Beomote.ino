@@ -10,12 +10,18 @@
  * Additionally, when IR B&O code for TV is received, the controller 
  * enters mode to control the Sony TV.
  * 
+ * Besides the conversion of Beo4 IR commands to Sony TV, the controller
+ * also waits for commands via serial input. The serial commands should
+ * end with a ';' char. Once the serial command is received it is passed
+ * to the IrManager to handle the command.
+ * 
  * Then of course, follows the mapping from B&O to Sony TV. 
  * 
  * When compiling and uploading use the following settings:
  *      Board: Arduino Nano
  *      Processor: ATMega328P (Old bootloader)
  *      Port: Whatever appears in the menu
+ *      Library: IRremote.h 2.8.1
  */
 
 #include "Beomote.h"
@@ -23,18 +29,12 @@
 #include "Beosender.h"
 #include "IrManager.h"
 
-int beoIrPin = 4;
-int beoSendPin = 9;
-IRsend irsend;
-unsigned char currentMode;
-
 IrManager manager;
-Beosender beo(beoSendPin);
-
+int beoIrPin = 4;
 char serialCmd;
 const int bufferSize = 10;
 int index = 0;
-char serialBuffer[bufferSize];
+static char serialBuffer[bufferSize];
 
 void setup() {
   Serial.begin(115200);
@@ -60,24 +60,18 @@ void loop() {
       
       Serial.print("Received serial command: ");  
       Serial.println(command);
-      beo.handleCommand(manager, command);
+      manager.handleCommand(command);
       
-      Beo.setInitialised(false);
       index = 0;
+      memset(serialBuffer, 0, sizeof(serialBuffer));
     }
     else {
       index++;  
-    }
-    
-  }
-
-  if (Serial.available() == 0 && !Beo.isInitialised()) {
-    Beo.initialize(beoIrPin);
+    } 
   }
   
   if (Beo.receive(cmd)) {  
     Serial.println(cmd.command, HEX); 
-    
     manager.handleCommand(cmd);
-  } // if Beo.receiveCmd
+  }
 }
